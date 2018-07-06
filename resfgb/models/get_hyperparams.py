@@ -13,9 +13,9 @@ def get_hyperparams(n_data, input_dim, n_class):
                      'wr': 1 / n_data,
                      'eta': 1e-2,
                      'momentum': 0.9,
-                     'minibatch_size': 100,
+                     'minibatch_size': 1000,
                      'scale': 1.0,
-                     'max_epoch': 100,
+                     'max_epoch': 5,
                      'tune_eta': True,
                      'eval_iters': 1000,
                      'early_stop': 10}
@@ -26,9 +26,9 @@ def get_hyperparams(n_data, input_dim, n_class):
                         'momentum': 0.9,
                         'minibatch_size': 100,
                         'scale': 1.0,
-                        'max_epoch': 50,
+                        'max_epoch': 10,
                         'tune_eta': True,
-                        'eval_iters': 1000,
+                        'eval_iters': 10000,
                         'early_stop': 10}
 
     hparams = {'model_type': 'logistic',

@@ -7,6 +7,7 @@ ResFGB for multiclass classificcation problems.
 from __future__ import print_function, absolute_import, division, unicode_literals
 from logging import getLogger, ERROR
 import time
+from tqdm import tqdm
 import sys
 import numpy as np
 import theano
@@ -98,6 +99,7 @@ class ResFGB(object):
             Zv = None
 
         for n_iter in range(self.__max_iters__):
+            logger.info('resfgb epoch: %s / %s' % (n_iter, self.__max_iters__))
             # ----- apply functional gradient -----
             stime = time.time()
             if n_iter >= 1:

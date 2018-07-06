@@ -3,6 +3,7 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 from logging import getLogger
 import time
+from tqdm import tqdm
 import numpy as np
 from resfgb.utils import minibatches
 from resfgb.models.model import Model
@@ -35,7 +36,7 @@ class Classifier(Model):
         minibatch_size = np.min((10000, Z.shape[0]))
         preds = []
 
-        for (Zb, Yb) in minibatches(minibatch_size, Z, Y, shuffle=False):
+        for (Zb, Yb) in tqdm(minibatches(minibatch_size, Z, Y, shuffle=False), desc='evalueate'):
             (loss_, n_, nc_, pred_proba) = self.__calc_accuracy(Zb, Yb)
             preds.append(pred_proba)
             loss = (n / (n + n_)) * loss + (n_ / (n + n_)) * loss_
@@ -51,8 +52,9 @@ class Classifier(Model):
         n = float(len(Y))
         loss = self.loss_func(Z, Y)
         reg = self.reg_func()
-        pred = self.predict(Z)
+        #pred = self.predict(Z)
         pred_proba = self.predict_proba(Z)
+        pred = pred_proba.argmax(axis=1)
         n_correct = (pred == Y).sum()  # np.sum([int(py == y) for (py, y) in zip(pred, Y)])
         return (loss + reg, n, n_correct, pred_proba)
 
@@ -63,7 +65,7 @@ class Classifier(Model):
         n_iters = 0
         eval_f = True
         while eval_f:
-            for (Xb, Yb) in minibatches(self.minibatch_size, X, Y, shuffle=True):
+            for (Xb, Yb) in tqdm(minibatches(self.minibatch_size, X, Y, shuffle=True), desc='evaluate_eta'):
                 if n_iters >= self.eval_iters:
                     eval_f = False
                     break
@@ -121,7 +123,7 @@ class Classifier(Model):
 
         Arguments
         ---------
-        X          : Numpy array. 
+        X          : Numpy array.
                      Training data.
         Y          : numpy array.
                      Training label.
@@ -155,16 +157,16 @@ class Classifier(Model):
             success = True
 
             for e in range(max_epoch):
+                logger.info('logres epoch: %s / %s' % (e, max_epoch))
                 stime = time.time()
-                for (Xb, Yb) in minibatches(self.minibatch_size,
-                                            X, Y, shuffle=True):
+                for (Xb, Yb) in tqdm(minibatches(self.minibatch_size,
+                                                 X, Y, shuffle=True), desc='fit'):
                     self.optimizer.update_func(Xb, Yb)
                 etime = time.time()
                 total_time += etime - stime
 
                 train_loss, train_acc = self.evaluate(X, Y)
-                if np.isnan(train_loss) or np.isinf(train_loss) \
-                   or (2 * init_train_loss + 1) <= train_loss:
+                if np.isnan(train_loss) or np.isinf(train_loss) or (2 * init_train_loss + 1) <= train_loss:
                     eta = self.optimizer.get_eta() / 2.
                     self.optimizer.set_eta(eta)
                     success = False
