@@ -57,6 +57,8 @@ class LogReg(Classifier):
         # functions.
         output = L.Act(L.FullConnect(self.Z, self.params), u'softmax')
         self.pred = T.argmax(output, axis=1)
+        self.pred_proba = output
+
         self.loss = L.Loss(output, self.Y)
         if wr > 0:
             self.wr = wr
@@ -92,5 +94,7 @@ class LogReg(Classifier):
 
     def compile(self):
         self.predict = theano.function([self.Z], self.pred)
+        self.predict_proba = theano.function([self.Z], self.pred_proba)
+
         self.loss_func = theano.function([self.Z, self.Y], self.loss)
         self.reg_func = theano.function([], self.reg)

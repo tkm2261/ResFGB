@@ -30,16 +30,21 @@ class Classifier(Model):
         self.eval_iters = eval_iters
         self.log_level = log_level
 
-    def evaluate(self, Z, Y):
+    def evaluate(self, Z, Y, eval_metric=None):
         n, nc, loss = 0, 0, 0.
         minibatch_size = np.min((10000, Z.shape[0]))
+        preds = []
+
         for (Zb, Yb) in minibatches(minibatch_size, Z, Y, shuffle=False):
-            (loss_, n_, nc_) = self.__calc_accuracy(Zb, Yb)
+            (loss_, n_, nc_, pred_proba) = self.__calc_accuracy(Zb, Yb)
+            preds.append(pred_proba)
             loss = (n / (n + n_)) * loss + (n_ / (n + n_)) * loss_
             n += n_
             nc += nc_
         acc = nc / n
-
+        preds = np.vstack(preds)
+        if eval_metric is not None:
+            acc = eval_metric(Y, preds)
         return loss, acc
 
     def __calc_accuracy(self, Z, Y):
@@ -47,8 +52,9 @@ class Classifier(Model):
         loss = self.loss_func(Z, Y)
         reg = self.reg_func()
         pred = self.predict(Z)
-        n_correct = np.sum([int(py == y) for (py, y) in zip(pred, Y)])
-        return (loss + reg, n, n_correct)
+        pred_proba = self.predict_proba(Z)
+        n_correct = (pred == Y).sum()  # np.sum([int(py == y) for (py, y) in zip(pred, Y)])
+        return (loss + reg, n, n_correct, pred_proba)
 
     def evaluate_eta(self, X, Y, eta):
         self.save_params()

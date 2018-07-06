@@ -16,17 +16,9 @@ from resfgb.models.mlp_block import MLPBlock
 
 logger = getLogger(__name__)
 
-try:
-    from numba import jit, f4
 
-    @jit(f4[:, :](f4[:, :], f4[:, :]), nopython=True)
-    def __dot__(a, b):
-        return np.dot(a, b)
-except ImportError:
-    logger.warning('fail to use Numba matrix product')
-
-    def __dot__(a, b):
-        return np.dot(a, b)
+def __dot__(a, b):
+    return np.dot(a, b)
 
 
 class ResGrad(object):
